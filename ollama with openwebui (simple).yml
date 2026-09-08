@@ -1,0 +1,26 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped # will attempt to restart the container if it was not stopped manually.
+    runtime: nvidia # sets the gpu runtime to nvidia to allow container to access nvidia gpus.
+    ports:
+      - "11434:11434"
+    volumes:
+      - /mnt/user/appdata/ollama:/root/.ollama
+    #environment:
+      #- OLLAMA_KEEP_ALIVE=1h # How long Ollama will keep a model loaded into memory.
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped # will attempt to restart the container if it was not stopped manually.
+    depends_on:
+      - ollama
+    ports:
+      - "8080:8080"
+    volumes:
+      - /mnt/user/appdata/ollama-webui:/app/backend/data
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY} # Use the command openssl rand -base64 48 in a terminal to generate this value. Used to secure persistent user sessions.
